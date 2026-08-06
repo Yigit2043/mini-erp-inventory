@@ -17,7 +17,7 @@ function Dashboard() {
       </div>
       <p>Giriş başarili! Buraya ürün, müşteri ve sipariş özetleri gelecek.</p>
       <nav style={{ marginTop: '20px' }}>
-        <Link to="/products">Ürünler</Link>  <Link to="/customers">Müşteriler</Link>
+        <Link to="/products">Ürünler</Link>  <Link to="/customers">Müşteriler</Link> <Link to="/orders">Siparişler</Link>
       </nav>
     </div>
   );

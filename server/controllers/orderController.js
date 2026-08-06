@@ -16,8 +16,8 @@ const createOrder = async (req, res) => {
     return res.status(400).json({ error: 'type ve items zorunlu' });
   }
 
-  // Toplam tutarı hesapla
-  const total = items.reduce((sum, item) => sum + item.qty * item.unit_price, 0);
+  // Toplam tutarı hesapla (2 ondalık basamağa yuvarlanmış)
+  const total = Math.round(items.reduce((sum, item) => sum + item.qty * item.unit_price, 0) * 100) / 100;
 
   // 1. Siparişi oluştur
   const { data: orderData, error: orderError } = await supabase
