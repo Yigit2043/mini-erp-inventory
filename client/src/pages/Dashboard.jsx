@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+
+import { useNavigate, Link } from 'react-router-dom';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -14,7 +15,10 @@ function Dashboard() {
         <h2>Dashboard</h2>
         <button onClick={handleLogout}>Çıkış Yap</button>
       </div>
-      <p>Giriş başaril! Buraya ürün, müşteri ve sipariş özetleri gelecek.</p>
+      <p>Giriş başarili! Buraya ürün, müşteri ve sipariş özetleri gelecek.</p>
+      <nav style={{ marginTop: '20px' }}>
+        <Link to="/products">Ürünler</Link>
+      </nav>
     </div>
   );
 }
