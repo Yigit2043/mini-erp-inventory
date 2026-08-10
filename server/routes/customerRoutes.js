@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
+const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
 const {
   getCustomers,
   getCustomerById,
@@ -13,6 +13,6 @@ router.get('/', authMiddleware, getCustomers);
 router.get('/:id', authMiddleware, getCustomerById);
 router.post('/', authMiddleware, createCustomer);
 router.put('/:id', authMiddleware, updateCustomer);
-router.delete('/:id', authMiddleware, deleteCustomer);
+router.delete('/:id', authMiddleware, requireRole('admin'), deleteCustomer);
 
 module.exports = router;

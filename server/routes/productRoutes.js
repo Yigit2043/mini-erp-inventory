@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
+const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
 const {
   getProducts,
   getProductById,
@@ -9,11 +9,10 @@ const {
   deleteProduct
 } = require('../controllers/productController');
 
-// Tüm ürün işlemleri giriş yapmayı gerektiriyor
 router.get('/', authMiddleware, getProducts);
 router.get('/:id', authMiddleware, getProductById);
 router.post('/', authMiddleware, createProduct);
 router.put('/:id', authMiddleware, updateProduct);
-router.delete('/:id', authMiddleware, deleteProduct);
+router.delete('/:id', authMiddleware, requireRole('admin'), deleteProduct);
 
 module.exports = router;
