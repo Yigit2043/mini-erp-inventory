@@ -1,14 +1,19 @@
 const supabase = require('../config/supabase');
+const { asyncHandler } = require('../middleware/errorHandler');
 
 // Tüm siparişleri getir
-const getOrders = async (req, res) => {
+const getOrders = asyncHandler(async (req, res) => {
   const { data, error } = await supabase.from('orders').select('*');
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    const err = new Error(error.message);
+    err.statusCode = 400;
+    throw err;
+  }
   res.json(data);
-};
+});
 
 // Tek sipariş + içindeki ürünleri getir
-const getOrderById = async (req, res) => {
+const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const { data: order, error: orderError } = await supabase
@@ -17,24 +22,34 @@ const getOrderById = async (req, res) => {
     .eq('id', id)
     .single();
 
-  if (orderError) return res.status(404).json({ error: 'Sipariş bulunamadı' });
+  if (orderError) {
+    const err = new Error('Sipariş bulunamadı');
+    err.statusCode = 404;
+    throw err;
+  }
 
   const { data: items, error: itemsError } = await supabase
     .from('order_items')
     .select('*, products(name, sku)')
     .eq('order_id', id);
 
-  if (itemsError) return res.status(400).json({ error: itemsError.message });
+  if (itemsError) {
+    const err = new Error(itemsError.message);
+    err.statusCode = 400;
+    throw err;
+  }
 
   res.json({ order, items });
-};
+});
 
 // Yeni sipariş oluştur
-const createOrder = async (req, res) => {
+const createOrder = asyncHandler(async (req, res) => {
   const { customer_id, type, items } = req.body;
 
   if (!type || !items || !items.length) {
-    return res.status(400).json({ error: 'type ve items zorunlu' });
+    const err = new Error('type ve items zorunlu');
+    err.statusCode = 400;
+    throw err;
   }
 
   const total = Math.round(items.reduce((sum, item) => sum + item.qty * item.unit_price, 0) * 100) / 100;
@@ -44,7 +59,11 @@ const createOrder = async (req, res) => {
     .insert([{ customer_id, type, status: 'completed', total }])
     .select();
 
-  if (orderError) return res.status(400).json({ error: orderError.message });
+  if (orderError) {
+    const err = new Error(orderError.message);
+    err.statusCode = 400;
+    throw err;
+  }
 
   const order = orderData[0];
 
@@ -79,6 +98,6 @@ const createOrder = async (req, res) => {
   }
 
   res.status(201).json({ message: 'Sipariş oluşturuldu', order });
-};
+});
 
 module.exports = { getOrders, getOrderById, createOrder };
