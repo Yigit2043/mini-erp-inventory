@@ -70,12 +70,16 @@ function Dashboard() {
           <h3>{stats.totalProducts}</h3>
           <p>Toplam Ürün</p>
         </div>
-        <div style={{ ...cardStyle, borderColor: stats.criticalProducts > 0 ? 'red' : '#ccc' }}>
-          <h3 style={{ color: stats.criticalProducts > 0 ? 'red' : 'inherit' }}>
-            {stats.criticalProducts}
-          </h3>
-          <p>Kritik Stoktaki Ürün</p>
-        </div>
+
+        <Link to="/critical-stock" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{ ...cardStyle, borderColor: stats.criticalProducts > 0 ? 'red' : '#ccc', cursor: 'pointer' }}>
+            <h3 style={{ color: stats.criticalProducts > 0 ? 'red' : 'inherit' }}>
+              {stats.criticalProducts}
+            </h3>
+            <p>Kritik Stoktaki Ürün</p>
+          </div>
+        </Link>
+
         <div style={cardStyle}>
           <h3>{stats.totalCustomers}</h3>
           <p>Toplam Müşteri</p>
@@ -87,7 +91,7 @@ function Dashboard() {
       </div>
 
       <nav style={{ marginTop: '30px' }}>
-        <Link to="/products">Ürünler</Link> <Link to="/customers">Müşteriler</Link> <Link to="/orders">Siparişler</Link>
+        <Link to="/products">Ürünler</Link> <Link to="/customers">Müşteriler</Link> <Link to="/orders">Siparişler</Link> <Link to="/critical-stock">Kritik Stok</Link>
       </nav>
     </div>
   );
