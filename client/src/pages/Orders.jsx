@@ -60,7 +60,7 @@ function Orders() {
       setProductId('');
       setQty('');
       fetchOrders();
-      fetchProducts(); // stok güncellendiği için ürün listesini de yenile
+      fetchProducts();
     } catch (err) {
       setError(err.response?.data?.error || 'Sipariş oluşturulamadı');
     }
@@ -119,7 +119,7 @@ function Orders() {
         <tbody>
           {orders.map((o) => (
             <tr key={o.id}>
-              <td>{o.id}</td>
+              <td><Link to={`/orders/${o.id}`}>{o.id}</Link></td>
               <td>{o.type === 'sale' ? 'Satış' : 'Alım'}</td>
               <td>{o.status}</td>
               <td>{o.total}</td>
