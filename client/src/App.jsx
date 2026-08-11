@@ -6,6 +6,7 @@ import Customers from './pages/Customers';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import CriticalStock from './pages/CriticalStock';
+import Categories from './pages/Categories';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
         <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
         <Route path="/critical-stock" element={<ProtectedRoute><CriticalStock /></ProtectedRoute>} />
+        <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
