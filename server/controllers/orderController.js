@@ -1,7 +1,7 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { calculateTotal, calculateStockChange } = require('../utils/orderUtils');
 
-// Tüm siparişleri getir
 const getOrders = asyncHandler(async (req, res) => {
   const { data, error } = await supabase.from('orders').select('*');
   if (error) {
@@ -12,7 +12,6 @@ const getOrders = asyncHandler(async (req, res) => {
   res.json(data);
 });
 
-// Tek sipariş + içindeki ürünleri getir
 const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -42,7 +41,6 @@ const getOrderById = asyncHandler(async (req, res) => {
   res.json({ order, items });
 });
 
-// Yeni sipariş oluştur
 const createOrder = asyncHandler(async (req, res) => {
   const { customer_id, type, items } = req.body;
 
@@ -52,7 +50,7 @@ const createOrder = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  const total = Math.round(items.reduce((sum, item) => sum + item.qty * item.unit_price, 0) * 100) / 100;
+  const total = calculateTotal(items);
 
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
@@ -81,7 +79,7 @@ const createOrder = asyncHandler(async (req, res) => {
       .eq('id', item.product_id)
       .single();
 
-    const changeQty = type === 'sale' ? -item.qty : item.qty;
+    const changeQty = calculateStockChange(type, item.qty);
     const newStock = productData.stock_qty + changeQty;
 
     await supabase
