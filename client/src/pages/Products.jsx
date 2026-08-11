@@ -4,10 +4,12 @@ import api from '../services/api';
 
 function Products() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [price, setPrice] = useState('');
   const [stockQty, setStockQty] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [error, setError] = useState('');
 
   const fetchProducts = async () => {
@@ -19,8 +21,18 @@ function Products() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/categories');
+      setCategories(res.data);
+    } catch (err) {
+      console.error('Kategoriler yüklenemedi');
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -32,12 +44,14 @@ function Products() {
         sku,
         price: parseFloat(price),
         stock_qty: parseInt(stockQty) || 0,
+        category_id: categoryId ? parseInt(categoryId) : null,
       });
       setName('');
       setSku('');
       setPrice('');
       setStockQty('');
-      fetchProducts(); // listeyi yenile
+      setCategoryId('');
+      fetchProducts();
     } catch (err) {
       setError(err.response?.data?.error || 'Ürün eklenemedi');
     }
@@ -53,8 +67,13 @@ function Products() {
     }
   };
 
+  const getCategoryName = (categoryId) => {
+    const cat = categories.find((c) => c.id === categoryId);
+    return cat ? cat.name : '-';
+  };
+
   return (
-    <div style={{ maxWidth: '800px', margin: '50px auto' }}>
+    <div style={{ maxWidth: '900px', margin: '50px auto' }}>
       <Link to="/dashboard">← Dashboard'a dön</Link>
       <h2>Ürünler</h2>
 
@@ -85,6 +104,12 @@ function Products() {
           value={stockQty}
           onChange={(e) => setStockQty(e.target.value)}
         />
+        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+          <option value="">Kategori seç (opsiyonel)</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
         <button type="submit">Ekle</button>
       </form>
 
@@ -97,6 +122,7 @@ function Products() {
             <th>SKU</th>
             <th>Fiyat</th>
             <th>Stok</th>
+            <th>Kategori</th>
             <th>İşlem</th>
           </tr>
         </thead>
@@ -107,6 +133,7 @@ function Products() {
               <td>{p.sku}</td>
               <td>{p.price}</td>
               <td>{p.stock_qty}</td>
+              <td>{getCategoryName(p.category_id)}</td>
               <td>
                 <button onClick={() => handleDelete(p.id)}>Sil</button>
               </td>
