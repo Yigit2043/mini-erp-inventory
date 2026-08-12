@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -8,11 +9,14 @@ const customerRoutes = require('./routes/customerRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
+const { generalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(generalLimiter);
 
 app.get('/', (req, res) => {
   res.send('Mini ERP backend çalışıyor 🚀');
