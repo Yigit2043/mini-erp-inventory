@@ -8,6 +8,7 @@ const productRoutes = require('./routes/productRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
@@ -27,6 +28,7 @@ app.use('/products', productRoutes);
 app.use('/customers', customerRoutes);
 app.use('/orders', orderRoutes);
 app.use('/categories', categoryRoutes);
+app.use('/suppliers', supplierRoutes);
 
 app.use(errorHandler);
 
