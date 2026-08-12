@@ -22,6 +22,21 @@ function OrderDetail() {
     fetchOrder();
   }, [id]);
 
+  const handleDownloadInvoice = async () => {
+    try {
+      const res = await api.get(`/orders/${id}/invoice`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `fatura-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      setError('Fatura indirilemedi');
+    }
+  };
+
   if (error) return <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>;
   if (!order) return <p style={{ textAlign: 'center' }}>Yükleniyor...</p>;
 
@@ -34,6 +49,10 @@ function OrderDetail() {
       <p><strong>Durum:</strong> {order.status}</p>
       <p><strong>Toplam:</strong> {order.total} ₺</p>
       <p><strong>Tarih:</strong> {new Date(order.created_at).toLocaleString('tr-TR')}</p>
+
+      <button onClick={handleDownloadInvoice} style={{ marginBottom: '20px' }}>
+        📄 Faturayı İndir
+      </button>
 
       <h3>Ürünler</h3>
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
