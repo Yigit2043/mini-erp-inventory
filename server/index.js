@@ -10,6 +10,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
@@ -31,6 +32,7 @@ app.use('/orders', orderRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/suppliers', supplierRoutes);
 app.use('/reports', reportRoutes);
+app.use('/notifications', notificationRoutes);
 
 app.use(errorHandler);
 
