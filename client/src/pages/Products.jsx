@@ -11,6 +11,7 @@ function Products() {
   const [stockQty, setStockQty] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -35,26 +36,45 @@ function Products() {
     fetchCategories();
   }, []);
 
+  const resetForm = () => {
+    setName('');
+    setSku('');
+    setPrice('');
+    setStockQty('');
+    setCategoryId('');
+    setEditingId(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const payload = {
+      name,
+      sku,
+      price: parseFloat(price),
+      stock_qty: parseInt(stockQty) || 0,
+      category_id: categoryId ? parseInt(categoryId) : null,
+    };
     try {
-      await api.post('/products', {
-        name,
-        sku,
-        price: parseFloat(price),
-        stock_qty: parseInt(stockQty) || 0,
-        category_id: categoryId ? parseInt(categoryId) : null,
-      });
-      setName('');
-      setSku('');
-      setPrice('');
-      setStockQty('');
-      setCategoryId('');
+      if (editingId) {
+        await api.put(`/products/${editingId}`, payload);
+      } else {
+        await api.post('/products', payload);
+      }
+      resetForm();
       fetchProducts();
     } catch (err) {
-      setError(err.response?.data?.error || 'Ürün eklenemedi');
+      setError(err.response?.data?.error || 'İşlem başarısız');
     }
+  };
+
+  const handleEdit = (product) => {
+    setEditingId(product.id);
+    setName(product.name);
+    setSku(product.sku);
+    setPrice(product.price);
+    setStockQty(product.stock_qty);
+    setCategoryId(product.category_id || '');
   };
 
   const handleDelete = async (id) => {
@@ -110,7 +130,12 @@ function Products() {
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
-        <button type="submit">Ekle</button>
+        <button type="submit">{editingId ? 'Güncelle' : 'Ekle'}</button>
+        {editingId && (
+          <button type="button" onClick={resetForm} style={{ marginLeft: '8px', backgroundColor: '#94a3b8' }}>
+            İptal
+          </button>
+        )}
       </form>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -135,6 +160,7 @@ function Products() {
               <td>{p.stock_qty}</td>
               <td>{getCategoryName(p.category_id)}</td>
               <td>
+                <button onClick={() => handleEdit(p)}>Düzenle</button>{' '}
                 <button onClick={() => handleDelete(p.id)}>Sil</button>
               </td>
             </tr>
