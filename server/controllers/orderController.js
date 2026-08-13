@@ -1,6 +1,7 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { calculateTotal, calculateStockChange } = require('../utils/orderUtils');
+const { logAction } = require('../utils/auditLogger');
 
 const getOrders = asyncHandler(async (req, res) => {
   const { data, error } = await supabase.from('orders').select('*');
@@ -94,6 +95,8 @@ const createOrder = asyncHandler(async (req, res) => {
       order_id: order.id
     }]);
   }
+
+  await logAction(req.user.id, 'create', 'order', order.id, `${type === 'sale' ? 'Satış' : 'Alım'} siparişi oluşturuldu, toplam: ${total}`);
 
   res.status(201).json({ message: 'Sipariş oluşturuldu', order });
 });

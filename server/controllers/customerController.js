@@ -1,5 +1,6 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { logAction } = require('../utils/auditLogger');
 
 const getCustomers = asyncHandler(async (req, res) => {
   const { data, error } = await supabase.from('customers').select('*');
@@ -41,6 +42,9 @@ const createCustomer = asyncHandler(async (req, res) => {
     err.statusCode = 400;
     throw err;
   }
+
+  await logAction(req.user.id, 'create', 'customer', data[0].id, `${name} eklendi`);
+
   res.status(201).json(data[0]);
 });
 
@@ -64,6 +68,9 @@ const updateCustomer = asyncHandler(async (req, res) => {
     err.statusCode = 404;
     throw err;
   }
+
+  await logAction(req.user.id, 'update', 'customer', id, 'Müşteri güncellendi');
+
   res.json(data[0]);
 });
 
@@ -75,6 +82,9 @@ const deleteCustomer = asyncHandler(async (req, res) => {
     err.statusCode = 400;
     throw err;
   }
+
+  await logAction(req.user.id, 'delete', 'customer', id, 'Müşteri silindi');
+
   res.json({ message: 'Müşteri silindi' });
 });
 

@@ -1,7 +1,7 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { logAction } = require('../utils/auditLogger');
 
-// Tüm ürünleri getir
 const getProducts = asyncHandler(async (req, res) => {
   const { data, error } = await supabase.from('products').select('*');
   if (error) {
@@ -12,7 +12,6 @@ const getProducts = asyncHandler(async (req, res) => {
   res.json(data);
 });
 
-// Tek ürün getir
 const getProductById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
@@ -24,9 +23,8 @@ const getProductById = asyncHandler(async (req, res) => {
   res.json(data);
 });
 
-// Yeni ürün ekle
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, sku, price, stock_qty, critical_level } = req.body;
+  const { name, sku, price, stock_qty, critical_level, category_id } = req.body;
 
   if (!name || !sku || price === undefined) {
     const err = new Error('name, sku ve price zorunlu');
@@ -36,7 +34,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
   const { data, error } = await supabase
     .from('products')
-    .insert([{ name, sku, price, stock_qty: stock_qty ?? 0, critical_level: critical_level ?? 5 }])
+    .insert([{ name, sku, price, stock_qty: stock_qty ?? 0, critical_level: critical_level ?? 5, category_id }])
     .select();
 
   if (error) {
@@ -44,10 +42,12 @@ const createProduct = asyncHandler(async (req, res) => {
     err.statusCode = 400;
     throw err;
   }
+
+  await logAction(req.user.id, 'create', 'product', data[0].id, `${name} eklendi`);
+
   res.status(201).json(data[0]);
 });
 
-// Ürün güncelle
 const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
@@ -68,10 +68,12 @@ const updateProduct = asyncHandler(async (req, res) => {
     err.statusCode = 404;
     throw err;
   }
+
+  await logAction(req.user.id, 'update', 'product', id, 'Ürün güncellendi');
+
   res.json(data[0]);
 });
 
-// Ürün sil
 const deleteProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { error } = await supabase.from('products').delete().eq('id', id);
@@ -80,6 +82,9 @@ const deleteProduct = asyncHandler(async (req, res) => {
     err.statusCode = 400;
     throw err;
   }
+
+  await logAction(req.user.id, 'delete', 'product', id, 'Ürün silindi');
+
   res.json({ message: 'Ürün silindi' });
 });
 
