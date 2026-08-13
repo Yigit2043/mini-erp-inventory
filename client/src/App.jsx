@@ -8,6 +8,7 @@ import OrderDetail from './pages/OrderDetail';
 import CriticalStock from './pages/CriticalStock';
 import Categories from './pages/Categories';
 import Suppliers from './pages/Suppliers';
+import Reports from './pages/Reports';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/critical-stock" element={<ProtectedRoute><CriticalStock /></ProtectedRoute>} />
         <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
         <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
