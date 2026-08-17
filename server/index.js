@@ -12,6 +12,7 @@ const supplierRoutes = require('./routes/supplierRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const userRoutes = require('./routes/userRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
@@ -35,6 +36,7 @@ app.use('/suppliers', supplierRoutes);
 app.use('/reports', reportRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/users', userRoutes);
+app.use('/audit-logs', auditRoutes);
 
 app.use(errorHandler);
 
