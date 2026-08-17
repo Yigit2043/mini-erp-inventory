@@ -10,6 +10,7 @@ function Orders() {
   const [productId, setProductId] = useState('');
   const [qty, setQty] = useState('');
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchOrders = async () => {
     try {
@@ -66,6 +67,11 @@ function Orders() {
     }
   };
 
+  const filteredOrders = orders.filter((o) =>
+    o.id.toString().includes(searchTerm) ||
+    (o.type === 'sale' ? 'satış' : 'alım').includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto' }}>
       <Link to="/dashboard">← Dashboard'a dön</Link>
@@ -104,6 +110,13 @@ function Orders() {
         <button type="submit">Sipariş Oluştur</button>
       </form>
 
+      <input
+        placeholder="Sipariş ID veya tip (satış/alım) ile ara..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ marginBottom: '15px', width: '300px' }}
+      />
+
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -117,7 +130,7 @@ function Orders() {
           </tr>
         </thead>
         <tbody>
-          {orders.map((o) => (
+          {filteredOrders.map((o) => (
             <tr key={o.id}>
               <td><Link to={`/orders/${o.id}`}>{o.id}</Link></td>
               <td>{o.type === 'sale' ? 'Satış' : 'Alım'}</td>

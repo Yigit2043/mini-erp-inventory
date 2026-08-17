@@ -12,6 +12,7 @@ function Products() {
   const [categoryId, setCategoryId] = useState('');
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchProducts = async () => {
     try {
@@ -92,6 +93,11 @@ function Products() {
     return cat ? cat.name : '-';
   };
 
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={{ maxWidth: '900px', margin: '50px auto' }}>
       <Link to="/dashboard">← Dashboard'a dön</Link>
@@ -138,6 +144,13 @@ function Products() {
         )}
       </form>
 
+      <input
+        placeholder="Ürün adı veya SKU ile ara..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ marginBottom: '15px', width: '300px' }}
+      />
+
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -152,7 +165,7 @@ function Products() {
           </tr>
         </thead>
         <tbody>
-          {products.map((p) => (
+          {filteredProducts.map((p) => (
             <tr key={p.id}>
               <td>{p.name}</td>
               <td>{p.sku}</td>

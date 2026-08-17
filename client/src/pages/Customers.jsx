@@ -9,6 +9,7 @@ function Customers() {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchCustomers = async () => {
     try {
@@ -64,6 +65,10 @@ function Customers() {
     }
   };
 
+  const filteredCustomers = customers.filter((c) =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto' }}>
       <Link to="/dashboard">← Dashboard'a dön</Link>
@@ -94,6 +99,13 @@ function Customers() {
         )}
       </form>
 
+      <input
+        placeholder="Müşteri adı ile ara..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ marginBottom: '15px', width: '300px' }}
+      />
+
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -106,7 +118,7 @@ function Customers() {
           </tr>
         </thead>
         <tbody>
-          {customers.map((c) => (
+          {filteredCustomers.map((c) => (
             <tr key={c.id}>
               <td>{c.name}</td>
               <td>{c.email}</td>
