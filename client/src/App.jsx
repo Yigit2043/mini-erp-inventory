@@ -11,6 +11,7 @@ import Suppliers from './pages/Suppliers';
 import Reports from './pages/Reports';
 import StockMovements from './pages/StockMovements';
 import UserManagement from './pages/UserManagement';
+import AuditLogs from './pages/AuditLogs';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+        <Route path="/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
