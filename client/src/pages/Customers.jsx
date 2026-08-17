@@ -8,6 +8,7 @@ function Customers() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const fetchCustomers = async () => {
     try {
@@ -22,18 +23,35 @@ function Customers() {
     fetchCustomers();
   }, []);
 
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setPhone('');
+    setEditingId(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const payload = { name, email, phone };
     try {
-      await api.post('/customers', { name, email, phone });
-      setName('');
-      setEmail('');
-      setPhone('');
+      if (editingId) {
+        await api.put(`/customers/${editingId}`, payload);
+      } else {
+        await api.post('/customers', payload);
+      }
+      resetForm();
       fetchCustomers();
     } catch (err) {
-      setError(err.response?.data?.error || 'Müşteri eklenemedi');
+      setError(err.response?.data?.error || 'İşlem başarısız');
     }
+  };
+
+  const handleEdit = (customer) => {
+    setEditingId(customer.id);
+    setName(customer.name);
+    setEmail(customer.email || '');
+    setPhone(customer.phone || '');
   };
 
   const handleDelete = async (id) => {
@@ -42,7 +60,7 @@ function Customers() {
       await api.delete(`/customers/${id}`);
       fetchCustomers();
     } catch (err) {
-      setError('Silme işlemi başarısız');
+      setError(err.response?.data?.error || 'Silme başarısız');
     }
   };
 
@@ -68,7 +86,12 @@ function Customers() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
-        <button type="submit">Ekle</button>
+        <button type="submit">{editingId ? 'Güncelle' : 'Ekle'}</button>
+        {editingId && (
+          <button type="button" onClick={resetForm} style={{ marginLeft: '8px', backgroundColor: '#94a3b8' }}>
+            İptal
+          </button>
+        )}
       </form>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -89,6 +112,7 @@ function Customers() {
               <td>{c.email}</td>
               <td>{c.phone}</td>
               <td>
+                <button onClick={() => handleEdit(c)}>Düzenle</button>{' '}
                 <button onClick={() => handleDelete(c.id)}>Sil</button>
               </td>
             </tr>
