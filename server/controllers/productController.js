@@ -88,4 +88,23 @@ const deleteProduct = asyncHandler(async (req, res) => {
   res.json({ message: 'Ürün silindi' });
 });
 
-module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct };
+// Bir ürünün stok hareket geçmişini getirir
+const getStockMovements = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const { data, error } = await supabase
+    .from('stock_movements')
+    .select('*')
+    .eq('product_id', id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    const err = new Error(error.message);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  res.json(data);
+});
+
+module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct, getStockMovements };

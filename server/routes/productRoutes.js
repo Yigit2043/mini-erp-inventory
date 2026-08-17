@@ -8,11 +8,13 @@ const {
   getProductById,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getStockMovements
 } = require('../controllers/productController');
 
 router.get('/', authMiddleware, getProducts);
 router.get('/:id', authMiddleware, getProductById);
+router.get('/:id/movements', authMiddleware, getStockMovements);
 router.post('/', authMiddleware, validate(productSchema), createProduct);
 router.put('/:id', authMiddleware, updateProduct);
 router.delete('/:id', authMiddleware, requireRole('admin'), deleteProduct);

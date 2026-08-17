@@ -161,7 +161,8 @@ function Products() {
               <td>{getCategoryName(p.category_id)}</td>
               <td>
                 <button onClick={() => handleEdit(p)}>Düzenle</button>{' '}
-                <button onClick={() => handleDelete(p.id)}>Sil</button>
+                <button onClick={() => handleDelete(p.id)}>Sil</button>{' '}
+                <Link to={`/products/${p.id}/movements`}>Geçmiş</Link>
               </td>
             </tr>
           ))}
