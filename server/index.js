@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -26,6 +28,8 @@ app.use(generalLimiter);
 app.get('/', (req, res) => {
   res.send('Mini ERP backend çalışıyor 🚀');
 });
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
