@@ -11,6 +11,7 @@ const {
   deleteProduct,
   getStockMovements
 } = require('../controllers/productController');
+const { exportProducts } = require('../controllers/exportController');
 
 /**
  * @swagger
@@ -27,6 +28,8 @@ const {
  *         description: Giriş yapılmamış
  */
 router.get('/', authMiddleware, getProducts);
+
+router.get('/export', authMiddleware, exportProducts);
 
 /**
  * @swagger
