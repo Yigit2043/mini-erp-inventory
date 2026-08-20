@@ -11,6 +11,8 @@ function Orders() {
   const [qty, setQty] = useState('');
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchOrders = async () => {
     try {
@@ -81,6 +83,12 @@ function Orders() {
     (o.type === 'sale' ? 'satış' : 'alım').includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto' }}>
       <Link to="/dashboard">← Dashboard'a dön</Link>
@@ -139,7 +147,7 @@ function Orders() {
           </tr>
         </thead>
         <tbody>
-          {filteredOrders.map((o) => (
+          {paginatedOrders.map((o) => (
             <tr key={o.id}>
               <td><Link to={`/orders/${o.id}`}>{o.id}</Link></td>
               <td>{o.type === 'sale' ? 'Satış' : 'Alım'}</td>
@@ -160,6 +168,22 @@ function Orders() {
           ))}
         </tbody>
       </table>
+
+      <div style={{ marginTop: '15px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          ← Önceki
+        </button>
+        <span>Sayfa {currentPage} / {totalPages || 1}</span>
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          disabled={currentPage === totalPages || totalPages === 0}
+        >
+          Sonraki →
+        </button>
+      </div>
     </div>
   );
 }

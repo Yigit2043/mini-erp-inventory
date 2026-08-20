@@ -10,6 +10,8 @@ function Customers() {
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchCustomers = async () => {
     try {
@@ -69,6 +71,12 @@ function Customers() {
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+  const paginatedCustomers = filteredCustomers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto' }}>
       <Link to="/dashboard">← Dashboard'a dön</Link>
@@ -118,12 +126,12 @@ function Customers() {
           </tr>
         </thead>
         <tbody>
-          {filteredCustomers.map((c) => (
+          {paginatedCustomers.map((c) => (
             <tr key={c.id}>
               <td>{c.name}</td>
               <td>{c.email}</td>
               <td>{c.phone}</td>
-                            <td>
+              <td>
                 <button onClick={() => handleEdit(c)}>Düzenle</button>{' '}
                 <button onClick={() => handleDelete(c.id)}>Sil</button>{' '}
                 <Link to={`/customers/${c.id}/ledger`}>Cari Hesap</Link>
@@ -132,6 +140,22 @@ function Customers() {
           ))}
         </tbody>
       </table>
+
+      <div style={{ marginTop: '15px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          ← Önceki
+        </button>
+        <span>Sayfa {currentPage} / {totalPages || 1}</span>
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          disabled={currentPage === totalPages || totalPages === 0}
+        >
+          Sonraki →
+        </button>
+      </div>
     </div>
   );
 }

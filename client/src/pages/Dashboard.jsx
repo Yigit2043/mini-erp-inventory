@@ -14,6 +14,7 @@ function Dashboard() {
     totalReceivable: 0,
     totalPayable: 0,
   });
+  const [topDebtors, setTopDebtors] = useState([]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -22,11 +23,12 @@ function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const [productsRes, customersRes, ordersRes, balanceRes] = await Promise.all([
+      const [productsRes, customersRes, ordersRes, balanceRes, debtorsRes] = await Promise.all([
         api.get('/products'),
         api.get('/customers'),
         api.get('/orders'),
         api.get('/reports/balance-summary'),
+        api.get('/reports/top-debtors'),
       ]);
 
       const products = productsRes.data;
@@ -48,6 +50,7 @@ function Dashboard() {
       });
 
       setBalances(balanceRes.data);
+      setTopDebtors(debtorsRes.data);
     } catch (err) {
       console.error('İstatistikler yüklenemedi', err);
     }
@@ -110,6 +113,29 @@ function Dashboard() {
           <p>Toplam Borç</p>
         </div>
       </div>
+
+      {topDebtors.length > 0 && (
+        <div style={{ marginTop: '30px' }}>
+          <h3>En Çok Borçlu Müşteriler</h3>
+          <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th>Müşteri</th>
+                <th>Bakiye</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topDebtors.map((d) => (
+                <tr key={d.id}>
+                  <td><Link to={`/customers/${d.id}/ledger`}>{d.name}</Link></td>
+                  <td style={{ color: 'red', fontWeight: 'bold' }}>{d.balance} ₺</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <nav style={{ marginTop: '30px' }}>
         <Link to="/products">Ürünler</Link> <Link to="/customers">Müşteriler</Link> <Link to="/orders">Siparişler</Link> <Link to="/critical-stock">Kritik Stok</Link> <Link to="/categories">Kategoriler</Link> <Link to="/suppliers">Tedarikçiler</Link> <Link to="/reports">Raporlar</Link> <Link to="/users">Kullanıcılar</Link> <Link to="/audit-logs">İşlem Kayıtları</Link> <Link to="/profile">Profilim</Link>
       </nav>
