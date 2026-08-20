@@ -123,9 +123,10 @@ function Customers() {
               <td>{c.name}</td>
               <td>{c.email}</td>
               <td>{c.phone}</td>
-              <td>
+                            <td>
                 <button onClick={() => handleEdit(c)}>Düzenle</button>{' '}
-                <button onClick={() => handleDelete(c.id)}>Sil</button>
+                <button onClick={() => handleDelete(c.id)}>Sil</button>{' '}
+                <Link to={`/customers/${c.id}/ledger`}>Cari Hesap</Link>
               </td>
             </tr>
           ))}

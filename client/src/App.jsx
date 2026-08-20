@@ -12,6 +12,7 @@ import Reports from './pages/Reports';
 import StockMovements from './pages/StockMovements';
 import UserManagement from './pages/UserManagement';
 import AuditLogs from './pages/AuditLogs';
+import CustomerLedger from './pages/CustomerLedger';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
         <Route path="/products/:id/movements" element={<ProtectedRoute><StockMovements /></ProtectedRoute>} />
         <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+        <Route path="/customers/:id/ledger" element={<ProtectedRoute><CustomerLedger /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
         <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
         <Route path="/critical-stock" element={<ProtectedRoute><CriticalStock /></ProtectedRoute>} />
