@@ -70,4 +70,44 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+// Giriş yapmış kullanıcının kendi şifresini değiştirmesini sağlar
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Mevcut ve yeni şifre zorunlu' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Yeni şifre en az 6 karakter olmalı' });
+    }
+
+    // Kullanıcının mevcut hash'ini al
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('password_hash')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+
+    // Mevcut şifreyi doğrula
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Mevcut şifre yanlış' });
+    }
+
+    // Yeni şifreyi hashle ve güncelle
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await supabase.from('users').update({ password_hash: newHash }).eq('id', req.user.id);
+
+    res.json({ message: 'Şifre başarıyla güncellendi' });
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+};
+
+module.exports = { register, login, changePassword };
