@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { productSchema } = require('../schemas/productSchema');
@@ -11,7 +12,9 @@ const {
   deleteProduct,
   getStockMovements
 } = require('../controllers/productController');
-const { exportProducts } = require('../controllers/exportController');
+const { exportProducts, importProducts } = require('../controllers/exportController');
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * @swagger
@@ -30,6 +33,8 @@ const { exportProducts } = require('../controllers/exportController');
 router.get('/', authMiddleware, getProducts);
 
 router.get('/export', authMiddleware, exportProducts);
+
+router.post('/import', authMiddleware, requireRole('admin'), upload.single('file'), importProducts);
 
 /**
  * @swagger
