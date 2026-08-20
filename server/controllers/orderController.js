@@ -55,7 +55,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
-    .insert([{ customer_id, type, status: 'completed', total }])
+    .insert([{ customer_id, type, status: 'pending', total }])
     .select();
 
   if (orderError) {
@@ -101,4 +101,33 @@ const createOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'Sipariş oluşturuldu', order });
 });
 
-module.exports = { getOrders, getOrderById, createOrder };
+// Bir siparişin durumunu günceller
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+  if (!status || !validStatuses.includes(status)) {
+    const err = new Error('Geçerli bir durum girin: pending, processing, completed, cancelled');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status })
+    .eq('id', id)
+    .select();
+
+  if (error) {
+    const err = new Error(error.message);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  await logAction(req.user.id, 'update', 'order', id, `Durum değiştirildi: ${status}`);
+
+  res.json(data[0]);
+});
+
+module.exports = { getOrders, getOrderById, createOrder, updateOrderStatus };
