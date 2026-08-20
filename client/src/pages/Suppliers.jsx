@@ -97,8 +97,9 @@ function Suppliers() {
               <td>{s.contact_person}</td>
               <td>{s.phone}</td>
               <td>{s.email}</td>
-              <td>
-                <button onClick={() => handleDelete(s.id)}>Sil</button>
+                            <td>
+                <button onClick={() => handleDelete(s.id)}>Sil</button>{' '}
+                <Link to={`/suppliers/${s.id}/ledger`}>Cari Hesap</Link>
               </td>
             </tr>
           ))}
