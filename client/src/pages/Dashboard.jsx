@@ -110,9 +110,8 @@ function Dashboard() {
           <p>Toplam Borç</p>
         </div>
       </div>
-
       <nav style={{ marginTop: '30px' }}>
-        <Link to="/products">Ürünler</Link> <Link to="/customers">Müşteriler</Link> <Link to="/orders">Siparişler</Link> <Link to="/critical-stock">Kritik Stok</Link> <Link to="/categories">Kategoriler</Link> <Link to="/suppliers">Tedarikçiler</Link> <Link to="/reports">Raporlar</Link> <Link to="/users">Kullanıcılar</Link> <Link to="/audit-logs">İşlem Kayıtları</Link>
+        <Link to="/products">Ürünler</Link> <Link to="/customers">Müşteriler</Link> <Link to="/orders">Siparişler</Link> <Link to="/critical-stock">Kritik Stok</Link> <Link to="/categories">Kategoriler</Link> <Link to="/suppliers">Tedarikçiler</Link> <Link to="/reports">Raporlar</Link> <Link to="/users">Kullanıcılar</Link> <Link to="/audit-logs">İşlem Kayıtları</Link> <Link to="/profile">Profilim</Link>
       </nav>
     </div>
   );
