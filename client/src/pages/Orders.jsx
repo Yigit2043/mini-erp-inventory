@@ -67,6 +67,15 @@ function Orders() {
     }
   };
 
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await api.put(`/orders/${orderId}/status`, { status: newStatus });
+      fetchOrders();
+    } catch (err) {
+      setError('Durum güncellenemedi');
+    }
+  };
+
   const filteredOrders = orders.filter((o) =>
     o.id.toString().includes(searchTerm) ||
     (o.type === 'sale' ? 'satış' : 'alım').includes(searchTerm.toLowerCase())
@@ -134,7 +143,17 @@ function Orders() {
             <tr key={o.id}>
               <td><Link to={`/orders/${o.id}`}>{o.id}</Link></td>
               <td>{o.type === 'sale' ? 'Satış' : 'Alım'}</td>
-              <td>{o.status}</td>
+              <td>
+                <select
+                  value={o.status}
+                  onChange={(e) => handleStatusChange(o.id, e.target.value)}
+                >
+                  <option value="pending">Beklemede</option>
+                  <option value="processing">Hazırlanıyor</option>
+                  <option value="completed">Tamamlandı</option>
+                  <option value="cancelled">İptal</option>
+                </select>
+              </td>
               <td>{o.total}</td>
               <td>{new Date(o.created_at).toLocaleString('tr-TR')}</td>
             </tr>
