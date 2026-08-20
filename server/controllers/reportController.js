@@ -14,14 +14,12 @@ const getMonthlySales = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  // Ay bazında grupla (örn: "2026-08")
   const monthlyTotals = {};
   orders.forEach((order) => {
-    const monthKey = order.created_at.slice(0, 7); // "YYYY-MM"
+    const monthKey = order.created_at.slice(0, 7);
     monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + order.total;
   });
 
-  // Grafik için düzenli bir diziye çevir, tarihe göre sırala
   const result = Object.entries(monthlyTotals)
     .map(([month, total]) => ({ month, total: Math.round(total * 100) / 100 }))
     .sort((a, b) => a.month.localeCompare(b.month));
@@ -50,9 +48,29 @@ const getTopProducts = asyncHandler(async (req, res) => {
   const result = Object.entries(productTotals)
     .map(([name, qty]) => ({ name, qty }))
     .sort((a, b) => b.qty - a.qty)
-    .slice(0, 5); // ilk 5
+    .slice(0, 5);
 
   res.json(result);
 });
 
-module.exports = { getMonthlySales, getTopProducts };
+// Toplam alacak (müşterilerden) ve toplam borç (tedarikçilere) özetini getirir
+const getBalanceSummary = asyncHandler(async (req, res) => {
+  const { data: customers, error: custError } = await supabase.from('customers').select('balance');
+  const { data: suppliers, error: supError } = await supabase.from('suppliers').select('balance');
+
+  if (custError || supError) {
+    const err = new Error('Bakiye özeti alınamadı');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const totalReceivable = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
+  const totalPayable = suppliers.reduce((sum, s) => sum + (s.balance || 0), 0);
+
+  res.json({
+    totalReceivable: Math.round(totalReceivable * 100) / 100,
+    totalPayable: Math.round(totalPayable * 100) / 100,
+  });
+});
+
+module.exports = { getMonthlySales, getTopProducts, getBalanceSummary };

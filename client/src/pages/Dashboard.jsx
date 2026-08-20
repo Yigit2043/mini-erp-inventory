@@ -10,6 +10,10 @@ function Dashboard() {
     totalCustomers: 0,
     todayOrders: 0,
   });
+  const [balances, setBalances] = useState({
+    totalReceivable: 0,
+    totalPayable: 0,
+  });
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -18,10 +22,11 @@ function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const [productsRes, customersRes, ordersRes] = await Promise.all([
+      const [productsRes, customersRes, ordersRes, balanceRes] = await Promise.all([
         api.get('/products'),
         api.get('/customers'),
         api.get('/orders'),
+        api.get('/reports/balance-summary'),
       ]);
 
       const products = productsRes.data;
@@ -41,6 +46,8 @@ function Dashboard() {
         totalCustomers: customers.length,
         todayOrders: todayOrdersCount,
       });
+
+      setBalances(balanceRes.data);
     } catch (err) {
       console.error('İstatistikler yüklenemedi', err);
     }
@@ -87,6 +94,20 @@ function Dashboard() {
         <div style={cardStyle}>
           <h3>{stats.todayOrders}</h3>
           <p>Bugünkü Sipariş</p>
+        </div>
+
+        <div style={{ ...cardStyle, borderColor: balances.totalReceivable > 0 ? '#16a34a' : '#ccc' }}>
+          <h3 style={{ color: balances.totalReceivable > 0 ? '#16a34a' : 'inherit' }}>
+            {balances.totalReceivable} ₺
+          </h3>
+          <p>Toplam Alacak</p>
+        </div>
+
+        <div style={{ ...cardStyle, borderColor: balances.totalPayable > 0 ? 'red' : '#ccc' }}>
+          <h3 style={{ color: balances.totalPayable > 0 ? 'red' : 'inherit' }}>
+            {balances.totalPayable} ₺
+          </h3>
+          <p>Toplam Borç</p>
         </div>
       </div>
 
