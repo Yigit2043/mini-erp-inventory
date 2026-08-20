@@ -73,4 +73,22 @@ const getBalanceSummary = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { getMonthlySales, getTopProducts, getBalanceSummary };
+// En çok borçlu müşterileri getirir (bakiyeye göre azalan sıralı)
+const getTopDebtors = asyncHandler(async (req, res) => {
+  const { data: customers, error } = await supabase
+    .from('customers')
+    .select('id, name, balance')
+    .gt('balance', 0)
+    .order('balance', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    const err = new Error(error.message);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  res.json(customers);
+});
+
+module.exports = { getMonthlySales, getTopProducts, getBalanceSummary, getTopDebtors };
