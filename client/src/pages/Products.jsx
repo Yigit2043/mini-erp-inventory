@@ -90,6 +90,21 @@ function Products() {
     }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const res = await api.get('/products/export', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'urunler.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      setError('Excel dışa aktarma başarısız');
+    }
+  };
+
   const getCategoryName = (categoryId) => {
     const cat = categories.find((c) => c.id === categoryId);
     return cat ? cat.name : '-';
@@ -110,6 +125,10 @@ function Products() {
     <div style={{ maxWidth: '900px', margin: '50px auto' }}>
       <Link to="/dashboard">← Dashboard'a dön</Link>
       <h2>Ürünler</h2>
+
+      <button onClick={handleExportExcel} style={{ marginBottom: '15px' }}>
+        📊 Excel'e Aktar
+      </button>
 
       <form onSubmit={handleSubmit} style={{ marginBottom: '30px' }}>
         <input
