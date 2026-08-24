@@ -57,3 +57,39 @@ th {
 tr:hover {
   background-color: #f8fafc;
 }
+/* Mobil uyumluluk */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  div[style*="maxWidth"] {
+    padding: 0 12px;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  input, select, button {
+    font-size: 16px; /* iOS'ta otomatik zoom'u engeller */
+    margin-bottom: 6px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  form input, form select, form button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  nav a {
+    display: inline-block;
+    margin: 4px 6px 4px 0;
+  }
+}
