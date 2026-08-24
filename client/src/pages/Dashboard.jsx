@@ -15,6 +15,7 @@ function Dashboard() {
     totalPayable: 0,
   });
   const [topDebtors, setTopDebtors] = useState([]);
+  const [reorderSuggestions, setReorderSuggestions] = useState([]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -23,12 +24,13 @@ function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const [productsRes, customersRes, ordersRes, balanceRes, debtorsRes] = await Promise.all([
+      const [productsRes, customersRes, ordersRes, balanceRes, debtorsRes, reorderRes] = await Promise.all([
         api.get('/products'),
         api.get('/customers'),
         api.get('/orders'),
         api.get('/reports/balance-summary'),
         api.get('/reports/top-debtors'),
+        api.get('/reports/reorder-suggestions'),
       ]);
 
       const products = productsRes.data;
@@ -51,6 +53,7 @@ function Dashboard() {
 
       setBalances(balanceRes.data);
       setTopDebtors(debtorsRes.data);
+      setReorderSuggestions(reorderRes.data);
     } catch (err) {
       console.error('İstatistikler yüklenemedi', err);
     }
@@ -129,6 +132,34 @@ function Dashboard() {
                 <tr key={d.id}>
                   <td><Link to={`/customers/${d.id}/ledger`}>{d.name}</Link></td>
                   <td style={{ color: 'red', fontWeight: 'bold' }}>{d.balance} ₺</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {reorderSuggestions.length > 0 && (
+        <div style={{ marginTop: '30px' }}>
+          <h3>🔔 Sipariş Önerisi (Stok Tükenme Tahmini)</h3>
+          <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th>Ürün</th>
+                <th>Mevcut Stok</th>
+                <th>Günlük Ort. Satış</th>
+                <th>Tükenmeye Kalan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reorderSuggestions.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.name}</td>
+                  <td>{s.stock_qty}</td>
+                  <td>{s.avgDailySales}</td>
+                  <td style={{ color: 'orange', fontWeight: 'bold' }}>
+                    {s.daysUntilStockout} gün
+                  </td>
                 </tr>
               ))}
             </tbody>
