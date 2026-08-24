@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import api from '../services/api';
 
 function Products() {
@@ -10,10 +11,12 @@ function Products() {
   const [price, setPrice] = useState('');
   const [stockQty, setStockQty] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [barcode, setBarcode] = useState('');
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [qrProduct, setQrProduct] = useState(null);
   const itemsPerPage = 5;
 
   const fetchProducts = async () => {
@@ -45,6 +48,7 @@ function Products() {
     setPrice('');
     setStockQty('');
     setCategoryId('');
+    setBarcode('');
     setEditingId(null);
   };
 
@@ -57,6 +61,7 @@ function Products() {
       price: parseFloat(price),
       stock_qty: parseInt(stockQty) || 0,
       category_id: categoryId ? parseInt(categoryId) : null,
+      barcode: barcode || null,
     };
     try {
       if (editingId) {
@@ -78,6 +83,7 @@ function Products() {
     setPrice(product.price);
     setStockQty(product.stock_qty);
     setCategoryId(product.category_id || '');
+    setBarcode(product.barcode || '');
   };
 
   const handleDelete = async (id) => {
@@ -163,6 +169,11 @@ function Products() {
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+        <input
+          placeholder="Barkod (opsiyonel)"
+          value={barcode}
+          onChange={(e) => setBarcode(e.target.value)}
+        />
         <button type="submit">{editingId ? 'Güncelle' : 'Ekle'}</button>
         {editingId && (
           <button type="button" onClick={resetForm} style={{ marginLeft: '8px', backgroundColor: '#94a3b8' }}>
@@ -179,6 +190,22 @@ function Products() {
       />
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {qrProduct && (
+        <div style={{
+          padding: '20px',
+          border: '1px solid #ccc',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          textAlign: 'center',
+          maxWidth: '250px'
+        }}>
+          <p><strong>{qrProduct.name}</strong></p>
+          <QRCodeSVG value={qrProduct.barcode || qrProduct.sku} size={180} />
+          <p style={{ fontSize: '12px', marginTop: '8px' }}>{qrProduct.barcode || qrProduct.sku}</p>
+          <button onClick={() => setQrProduct(null)} style={{ marginTop: '10px' }}>Kapat</button>
+        </div>
+      )}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
@@ -202,6 +229,7 @@ function Products() {
               <td>
                 <button onClick={() => handleEdit(p)}>Düzenle</button>{' '}
                 <button onClick={() => handleDelete(p.id)}>Sil</button>{' '}
+                <button onClick={() => setQrProduct(p)}>QR</button>{' '}
                 <Link to={`/products/${p.id}/movements`}>Geçmiş</Link>
               </td>
             </tr>
@@ -228,4 +256,4 @@ function Products() {
   );
 }
 
-export default Products;
+export default Products; 

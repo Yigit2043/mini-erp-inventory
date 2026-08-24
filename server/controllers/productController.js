@@ -107,4 +107,24 @@ const getStockMovements = asyncHandler(async (req, res) => {
   res.json(data);
 });
 
-module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct, getStockMovements };
+// Barkod ile ürün arar (barkod okuyucu/kamera taraması için)
+const getProductByBarcode = asyncHandler(async (req, res) => {
+  const { barcode } = req.params;
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('barcode', barcode)
+    .single();
+
+  if (error) {
+    const err = new Error('Bu barkoda ait ürün bulunamadı');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  res.json(data);
+});
+
+
+module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct, getStockMovements, getProductByBarcode };
