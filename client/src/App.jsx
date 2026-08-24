@@ -17,6 +17,8 @@ import SupplierLedger from './pages/SupplierLedger';
 import Profile from './pages/Profile';
 import BarcodeScanner from './pages/BarcodeScanner';
 import Warehouses from './pages/Warehouses';
+import CustomerLogin from './pages/CustomerLogin';
+import CustomerPortal from './pages/CustomerPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -41,6 +43,8 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/scan" element={<ProtectedRoute><BarcodeScanner /></ProtectedRoute>} />
         <Route path="/warehouses" element={<ProtectedRoute><Warehouses /></ProtectedRoute>} />
+        <Route path="/portal/login" element={<CustomerLogin />} />
+        <Route path="/portal" element={<CustomerPortal />} />
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
