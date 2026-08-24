@@ -16,6 +16,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const userRoutes = require('./routes/userRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const warehouseRoutes = require('./routes/warehouseRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
@@ -43,6 +44,7 @@ app.use('/notifications', notificationRoutes);
 app.use('/users', userRoutes);
 app.use('/audit-logs', auditRoutes);
 app.use('/transactions', transactionRoutes);
+app.use('/warehouses', warehouseRoutes);
 
 app.use(errorHandler);
 

@@ -16,6 +16,7 @@ import CustomerLedger from './pages/CustomerLedger';
 import SupplierLedger from './pages/SupplierLedger';
 import Profile from './pages/Profile';
 import BarcodeScanner from './pages/BarcodeScanner';
+import Warehouses from './pages/Warehouses';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
         <Route path="/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/scan" element={<ProtectedRoute><BarcodeScanner /></ProtectedRoute>} />
+        <Route path="/warehouses" element={<ProtectedRoute><Warehouses /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
