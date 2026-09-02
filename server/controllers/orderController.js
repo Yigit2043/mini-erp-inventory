@@ -51,8 +51,60 @@ const createOrder = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  const total = calculateTotal(items);
+  const productIds = items.map((item) => item.product_id);
 
+  const { data: products, error: productsError } = await supabase
+    .from('products')
+    .select('id, price, stock_qty')
+    .in('id', productIds);
+
+  if (productsError) {
+    const err = new Error(productsError.message);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const productMap = {};
+  products.forEach((p) => { productMap[p.id] = p; });
+
+  // TÜM doğrulamalar (ürün var mı, adet geçerli mi, stok yeterli mi)
+  // herhangi bir INSERT yapmadan önce tamamlanıyor — böylece hata durumunda
+  // veritabanında yarım kalmış/yetim bir sipariş kaydı OLUŞMUYOR.
+  for (const item of items) {
+    const product = productMap[item.product_id];
+
+    if (!product) {
+      const err = new Error(`Ürün bulunamadı: ID ${item.product_id}`);
+      err.statusCode = 400;
+      throw err;
+    }
+    if (!item.qty || item.qty <= 0) {
+      const err = new Error('Geçersiz adet girildi');
+      err.statusCode = 400;
+      throw err;
+    }
+    if (type === 'sale') {
+      const projectedStock = product.stock_qty - item.qty;
+      if (projectedStock < 0) {
+        const err = new Error(
+          `Yetersiz stok: ürün ID ${product.id} için mevcut stok ${product.stock_qty}, istenen ${item.qty}`
+        );
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+  }
+
+  // Doğrulamalar geçti — fiyatları DAİMA veritabanından al, isteğin içinden değil
+  const verifiedItems = items.map((item) => ({
+    product_id: item.product_id,
+    qty: item.qty,
+    unit_price: productMap[item.product_id].price,
+  }));
+
+  const total = calculateTotal(verifiedItems);
+
+  // Artık güvenle sipariş kaydını oluşturabiliriz
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
     .insert([{ customer_id, type, status: 'pending', total }])
@@ -66,7 +118,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
   const order = orderData[0];
 
-  for (const item of items) {
+  for (const item of verifiedItems) {
     await supabase.from('order_items').insert([{
       order_id: order.id,
       product_id: item.product_id,
@@ -74,14 +126,9 @@ const createOrder = asyncHandler(async (req, res) => {
       unit_price: item.unit_price
     }]);
 
-    const { data: productData } = await supabase
-      .from('products')
-      .select('stock_qty')
-      .eq('id', item.product_id)
-      .single();
-
+    const currentStock = productMap[item.product_id].stock_qty;
     const changeQty = calculateStockChange(type, item.qty);
-    const newStock = productData.stock_qty + changeQty;
+    const newStock = currentStock + changeQty;
 
     await supabase
       .from('products')
@@ -101,7 +148,6 @@ const createOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'Sipariş oluşturuldu', order });
 });
 
-// Bir siparişin durumunu günceller
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
