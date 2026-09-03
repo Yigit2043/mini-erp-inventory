@@ -26,13 +26,12 @@ const getTransactions = asyncHandler(async (req, res) => {
 const createTransaction = asyncHandler(async (req, res) => {
   const { customer_id, supplier_id, type, amount, note } = req.body;
 
-  if (!type || !amount || (!customer_id && !supplier_id)) {
+  if (!type || amount === undefined || amount === null || (!customer_id && !supplier_id)) {
     const err = new Error('type, amount ve customer_id veya supplier_id zorunlu');
     err.statusCode = 400;
     throw err;
   }
 
-  // Hareketi kaydet
   const { data, error } = await supabase
     .from('transactions')
     .insert([{ customer_id, supplier_id, type, amount, note }])
@@ -44,20 +43,24 @@ const createTransaction = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  // Bakiyeyi güncelle
   const table = customer_id ? 'customers' : 'suppliers';
   const id = customer_id || supplier_id;
 
   const { data: entity } = await supabase.from(table).select('balance').eq('id', id).single();
   const currentBalance = entity?.balance || 0;
 
-  // debt (borçlanma) bakiyeyi artırır, payment (ödeme) azaltır
   const change = type === 'debt' ? amount : -amount;
   const newBalance = currentBalance + change;
 
   await supabase.from(table).update({ balance: newBalance }).eq('id', id);
 
-  await logAction(req.user.id, 'create', 'transaction', data[0].id, `${type}: ${amount}`);
+  await logAction(
+    req.user.id,
+    'create',
+    'transaction',
+    data[0].id,
+    `${type === 'debt' ? 'Borçlandırma' : 'Ödeme'}: ${amount} — ${table === 'customers' ? 'Müşteri' : 'Tedarikçi'} ID ${id}, yeni bakiye: ${newBalance}`
+  );
 
   res.status(201).json({ transaction: data[0], newBalance });
 });

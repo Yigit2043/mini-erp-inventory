@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authMiddleware } = require('../middleware/authMiddleware');
+const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
 const { getTransactions, createTransaction } = require('../controllers/transactionController');
 
 /**
@@ -57,6 +57,6 @@ router.get('/', authMiddleware, getTransactions);
  *       201:
  *         description: Hareket oluşturuldu, güncel bakiye döndü
  */
-router.post('/', authMiddleware, createTransaction);
+router.post('/', authMiddleware, requireRole('admin'), createTransaction);
 
 module.exports = router;
