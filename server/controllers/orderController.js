@@ -1,6 +1,5 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { calculateTotal, calculateStockChange } = require('../utils/orderUtils');
 const { logAction } = require('../utils/auditLogger');
 
 const getOrders = asyncHandler(async (req, res) => {
@@ -42,8 +41,12 @@ const getOrderById = asyncHandler(async (req, res) => {
   res.json({ order, items });
 });
 
+// Sipariş oluşturma artık TEK bir veritabanı fonksiyonu (RPC) çağırıyor.
+// Fiyat kontrolü, stok kontrolü, sipariş+kalem+hareket kaydı hepsi
+// veritabanının içinde, TEK bir transaction olarak çalışıyor.
+// Ortasında herhangi bir adım hata verirse, HİÇBİR ŞEY kaydedilmiyor.
 const createOrder = asyncHandler(async (req, res) => {
-  const { customer_id, type, items } = req.body;
+  const { customer_id, supplier_id, type, items } = req.body;
 
   if (!type || !items || !items.length) {
     const err = new Error('type ve items zorunlu');
@@ -51,99 +54,22 @@ const createOrder = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  const productIds = items.map((item) => item.product_id);
+  const { data: order, error } = await supabase.rpc('create_order', {
+    p_customer_id: customer_id || null,
+    p_supplier_id: supplier_id || null,
+    p_type: type,
+    p_items: items.map((item) => ({ product_id: item.product_id, qty: item.qty })),
+  });
 
-  const { data: products, error: productsError } = await supabase
-    .from('products')
-    .select('id, price, stock_qty')
-    .in('id', productIds);
-
-  if (productsError) {
-    const err = new Error(productsError.message);
+  if (error) {
+    // Postgres fonksiyonu içindeki raise exception mesajları buraya düşer
+    // (örn. "Yetersiz stok: ürün ID 1 için mevcut stok 0, istenen 1")
+    const err = new Error(error.message);
     err.statusCode = 400;
     throw err;
   }
 
-  const productMap = {};
-  products.forEach((p) => { productMap[p.id] = p; });
-
-  // TÜM doğrulamalar (ürün var mı, adet geçerli mi, stok yeterli mi)
-  // herhangi bir INSERT yapmadan önce tamamlanıyor — böylece hata durumunda
-  // veritabanında yarım kalmış/yetim bir sipariş kaydı OLUŞMUYOR.
-  for (const item of items) {
-    const product = productMap[item.product_id];
-
-    if (!product) {
-      const err = new Error(`Ürün bulunamadı: ID ${item.product_id}`);
-      err.statusCode = 400;
-      throw err;
-    }
-    if (!item.qty || item.qty <= 0) {
-      const err = new Error('Geçersiz adet girildi');
-      err.statusCode = 400;
-      throw err;
-    }
-    if (type === 'sale') {
-      const projectedStock = product.stock_qty - item.qty;
-      if (projectedStock < 0) {
-        const err = new Error(
-          `Yetersiz stok: ürün ID ${product.id} için mevcut stok ${product.stock_qty}, istenen ${item.qty}`
-        );
-        err.statusCode = 400;
-        throw err;
-      }
-    }
-  }
-
-  // Doğrulamalar geçti — fiyatları DAİMA veritabanından al, isteğin içinden değil
-  const verifiedItems = items.map((item) => ({
-    product_id: item.product_id,
-    qty: item.qty,
-    unit_price: productMap[item.product_id].price,
-  }));
-
-  const total = calculateTotal(verifiedItems);
-
-  // Artık güvenle sipariş kaydını oluşturabiliriz
-  const { data: orderData, error: orderError } = await supabase
-    .from('orders')
-    .insert([{ customer_id, type, status: 'pending', total }])
-    .select();
-
-  if (orderError) {
-    const err = new Error(orderError.message);
-    err.statusCode = 400;
-    throw err;
-  }
-
-  const order = orderData[0];
-
-  for (const item of verifiedItems) {
-    await supabase.from('order_items').insert([{
-      order_id: order.id,
-      product_id: item.product_id,
-      qty: item.qty,
-      unit_price: item.unit_price
-    }]);
-
-    const currentStock = productMap[item.product_id].stock_qty;
-    const changeQty = calculateStockChange(type, item.qty);
-    const newStock = currentStock + changeQty;
-
-    await supabase
-      .from('products')
-      .update({ stock_qty: newStock })
-      .eq('id', item.product_id);
-
-    await supabase.from('stock_movements').insert([{
-      product_id: item.product_id,
-      change_qty: changeQty,
-      reason: type === 'sale' ? 'Satış' : 'Alım',
-      order_id: order.id
-    }]);
-  }
-
-  await logAction(req.user.id, 'create', 'order', order.id, `${type === 'sale' ? 'Satış' : 'Alım'} siparişi oluşturuldu, toplam: ${total}`);
+  await logAction(req.user.id, 'create', 'order', order.id, `${type === 'sale' ? 'Satış' : 'Alım'} siparişi oluşturuldu, toplam: ${order.total}`);
 
   res.status(201).json({ message: 'Sipariş oluşturuldu', order });
 });
