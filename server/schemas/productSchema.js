@@ -6,6 +6,8 @@ const productSchema = z.object({
   price: z.number().positive('Fiyat pozitif olmalı'),
   stock_qty: z.number().int().nonnegative('Stok negatif olamaz').optional(),
   critical_level: z.number().int().nonnegative('Kritik seviye negatif olamaz').optional(),
+  category_id: z.number().int().nullable().optional(),
+  barcode: z.string().nullable().optional(),
 });
 
 module.exports = { productSchema };
