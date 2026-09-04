@@ -1,34 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function Categories() {
-  const [categories, setCategories] = useState([]);
+  const { data: categories, error: fetchError, refetch } = useFetch('/categories');
   const [name, setName] = useState('');
-  const [error, setError] = useState('');
-
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get('/categories');
-      setCategories(res.data);
-    } catch (err) {
-      setError('Kategoriler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const [formError, setFormError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
     try {
       await api.post('/categories', { name });
       setName('');
-      fetchCategories();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'Kategori eklenemedi');
+      setFormError(err.response?.data?.error || 'Kategori eklenemedi');
     }
   };
 
@@ -36,9 +24,9 @@ function Categories() {
     if (!window.confirm('Bu kategoriyi silmek istediğine emin misin?')) return;
     try {
       await api.delete(`/categories/${id}`);
-      fetchCategories();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'Silme başarısız');
+      setFormError(err.response?.data?.error || 'Silme başarısız');
     }
   };
 
@@ -57,7 +45,7 @@ function Categories() {
         <button type="submit">Ekle</button>
       </form>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {(formError || fetchError) && <p style={{ color: 'red' }}>{formError || fetchError}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
