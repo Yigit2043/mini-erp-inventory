@@ -1,40 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function Suppliers() {
-  const [suppliers, setSuppliers] = useState([]);
+  const { data: suppliers, error: fetchError, refetch } = useFetch('/suppliers');
   const [name, setName] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-
-  const fetchSuppliers = async () => {
-    try {
-      const res = await api.get('/suppliers');
-      setSuppliers(res.data);
-    } catch (err) {
-      setError('Tedarikçiler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchSuppliers();
-  }, []);
+  const [formError, setFormError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
     try {
       await api.post('/suppliers', { name, contact_person: contactPerson, phone, email });
       setName('');
       setContactPerson('');
       setPhone('');
       setEmail('');
-      fetchSuppliers();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'Tedarikçi eklenemedi');
+      setFormError(err.response?.data?.error || 'Tedarikçi eklenemedi');
     }
   };
 
@@ -42,9 +30,9 @@ function Suppliers() {
     if (!window.confirm('Bu tedarikçiyi silmek istediğine emin misin?')) return;
     try {
       await api.delete(`/suppliers/${id}`);
-      fetchSuppliers();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'Silme başarısız');
+      setFormError(err.response?.data?.error || 'Silme başarısız');
     }
   };
 
@@ -78,7 +66,7 @@ function Suppliers() {
         <button type="submit">Ekle</button>
       </form>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {(formError || fetchError) && <p style={{ color: 'red' }}>{formError || fetchError}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
@@ -97,7 +85,7 @@ function Suppliers() {
               <td>{s.contact_person}</td>
               <td>{s.phone}</td>
               <td>{s.email}</td>
-                            <td>
+              <td>
                 <button onClick={() => handleDelete(s.id)}>Sil</button>{' '}
                 <Link to={`/suppliers/${s.id}/ledger`}>Cari Hesap</Link>
               </td>

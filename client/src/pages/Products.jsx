@@ -1,46 +1,24 @@
-import { useState, useEffect } from 'react';
+ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function Products() {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const { data: products, error: fetchError, refetch } = useFetch('/products');
+  const { data: categories } = useFetch('/categories');
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [price, setPrice] = useState('');
   const [stockQty, setStockQty] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [barcode, setBarcode] = useState('');
-  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [qrProduct, setQrProduct] = useState(null);
   const itemsPerPage = 5;
-
-  const fetchProducts = async () => {
-    try {
-      const res = await api.get('/products');
-      setProducts(res.data);
-    } catch (err) {
-      setError('Ürünler yüklenemedi');
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get('/categories');
-      setCategories(res.data);
-    } catch (err) {
-      console.error('Kategoriler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
 
   const resetForm = () => {
     setName('');
@@ -54,7 +32,7 @@ function Products() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
     const payload = {
       name,
       sku,
@@ -70,9 +48,9 @@ function Products() {
         await api.post('/products', payload);
       }
       resetForm();
-      fetchProducts();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'İşlem başarısız');
+      setFormError(err.response?.data?.error || 'İşlem başarısız');
     }
   };
 
@@ -90,9 +68,9 @@ function Products() {
     if (!window.confirm('Bu ürünü silmek istediğine emin misin?')) return;
     try {
       await api.delete(`/products/${id}`);
-      fetchProducts();
+      refetch();
     } catch (err) {
-      setError('Silme işlemi başarısız');
+      setFormError('Silme işlemi başarısız');
     }
   };
 
@@ -107,7 +85,7 @@ function Products() {
       link.click();
       link.remove();
     } catch (err) {
-      setError('Excel dışa aktarma başarısız');
+      setFormError('Excel dışa aktarma başarısız');
     }
   };
 
@@ -189,7 +167,7 @@ function Products() {
         style={{ marginBottom: '15px', width: '300px' }}
       />
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {(formError || fetchError) && <p style={{ color: 'red' }}>{formError || fetchError}</p>}
 
       {qrProduct && (
         <div style={{
@@ -256,4 +234,4 @@ function Products() {
   );
 }
 
-export default Products; 
+export default Products;

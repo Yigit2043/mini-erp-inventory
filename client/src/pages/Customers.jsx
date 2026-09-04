@@ -1,30 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function Customers() {
-  const [customers, setCustomers] = useState([]);
+  const { data: customers, error: fetchError, refetch } = useFetch('/customers');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
-  const fetchCustomers = async () => {
-    try {
-      const res = await api.get('/customers');
-      setCustomers(res.data);
-    } catch (err) {
-      setError('Müşteriler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
 
   const resetForm = () => {
     setName('');
@@ -35,7 +23,7 @@ function Customers() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
     const payload = { name, email, phone };
     try {
       if (editingId) {
@@ -44,9 +32,9 @@ function Customers() {
         await api.post('/customers', payload);
       }
       resetForm();
-      fetchCustomers();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'İşlem başarısız');
+      setFormError(err.response?.data?.error || 'İşlem başarısız');
     }
   };
 
@@ -61,9 +49,9 @@ function Customers() {
     if (!window.confirm('Bu müşteriyi silmek istediğine emin misin?')) return;
     try {
       await api.delete(`/customers/${id}`);
-      fetchCustomers();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'Silme başarısız');
+      setFormError(err.response?.data?.error || 'Silme başarısız');
     }
   };
 
@@ -114,7 +102,7 @@ function Customers() {
         style={{ marginBottom: '15px', width: '300px' }}
       />
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {(formError || fetchError) && <p style={{ color: 'red' }}>{formError || fetchError}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>

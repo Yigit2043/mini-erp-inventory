@@ -1,49 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function Orders() {
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
+  const { data: orders, error: fetchError, refetch } = useFetch('/orders');
+  const { data: products, refetch: refetchProducts } = useFetch('/products');
   const [customerId, setCustomerId] = useState('');
   const [type, setType] = useState('sale');
   const [productId, setProductId] = useState('');
   const [qty, setQty] = useState('');
-  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const fetchOrders = async () => {
-    try {
-      const res = await api.get('/orders');
-      setOrders(res.data);
-    } catch (err) {
-      setError('Siparişler yüklenemedi');
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      const res = await api.get('/products');
-      setProducts(res.data);
-    } catch (err) {
-      setError('Ürünler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-    fetchProducts();
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
 
     const selectedProduct = products.find((p) => p.id === parseInt(productId));
     if (!selectedProduct) {
-      setError('Lütfen bir ürün seç');
+      setFormError('Lütfen bir ürün seç');
       return;
     }
 
@@ -62,19 +40,19 @@ function Orders() {
       setCustomerId('');
       setProductId('');
       setQty('');
-      fetchOrders();
-      fetchProducts();
+      refetch();
+      refetchProducts();
     } catch (err) {
-      setError(err.response?.data?.error || 'Sipariş oluşturulamadı');
+      setFormError(err.response?.data?.error || 'Sipariş oluşturulamadı');
     }
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await api.put(`/orders/${orderId}/status`, { status: newStatus });
-      fetchOrders();
+      refetch();
     } catch (err) {
-      setError('Durum güncellenemedi');
+      setFormError('Durum güncellenemedi');
     }
   };
 
@@ -134,7 +112,7 @@ function Orders() {
         style={{ marginBottom: '15px', width: '300px' }}
       />
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {(formError || fetchError) && <p style={{ color: 'red' }}>{formError || fetchError}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
