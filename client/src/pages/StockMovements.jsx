@@ -1,36 +1,17 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import api from '../services/api';
+import { Link, useParams } from 'react-router-dom';
+import useFetch from '../hooks/useFetch';
 
 function StockMovements() {
   const { id } = useParams();
-  const [movements, setMovements] = useState([]);
-  const [product, setProduct] = useState(null);
-  const [error, setError] = useState('');
-
-  const fetchData = async () => {
-    try {
-      const [movementsRes, productRes] = await Promise.all([
-        api.get(`/products/${id}/movements`),
-        api.get(`/products/${id}`),
-      ]);
-      setMovements(movementsRes.data);
-      setProduct(productRes.data);
-    } catch (err) {
-      setError('Veriler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [id]);
+  const { data: movements, error } = useFetch(`/products/${id}/movements`, [id]);
+  const { data: product } = useFetch(`/products/${id}`, [id]);
 
   if (error) return <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>;
 
   return (
     <div style={{ maxWidth: '700px', margin: '50px auto' }}>
       <Link to="/products">← Ürünlere dön</Link>
-      <h2>Stok Hareketleri {product && `- ${product.name}`}</h2>
+      <h2>Stok Hareketleri {product?.name && `- ${product.name}`}</h2>
 
       {movements.length === 0 ? (
         <p>Bu ürün için henüz stok hareketi yok</p>
