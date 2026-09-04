@@ -1,32 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function CustomerLedger() {
   const { id } = useParams();
-  const [customer, setCustomer] = useState(null);
-  const [transactions, setTransactions] = useState([]);
+  const { data: customerData, refetch: refetchCustomer } = useFetch(`/customers/${id}`, [id]);
+  const { data: transactions, refetch: refetchTransactions } = useFetch(`/transactions?customer_id=${id}`, [id]);
+  const customer = Array.isArray(customerData) ? null : customerData;
   const [type, setType] = useState('payment');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
-
-  const fetchData = async () => {
-    try {
-      const [customerRes, txRes] = await Promise.all([
-        api.get(`/customers/${id}`),
-        api.get(`/transactions?customer_id=${id}`),
-      ]);
-      setCustomer(customerRes.data);
-      setTransactions(txRes.data);
-    } catch (err) {
-      setError('Veriler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,13 +25,13 @@ function CustomerLedger() {
       });
       setAmount('');
       setNote('');
-      fetchData();
+      refetchCustomer();
+      refetchTransactions();
     } catch (err) {
       setError(err.response?.data?.error || 'İşlem başarısız');
     }
   };
 
-  if (error && !customer) return <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>;
   if (!customer) return <p style={{ textAlign: 'center' }}>Yükleniyor...</p>;
 
   return (

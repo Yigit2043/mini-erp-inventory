@@ -1,33 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function SupplierLedger() {
   const { id } = useParams();
-  const [supplier, setSupplier] = useState(null);
-  const [transactions, setTransactions] = useState([]);
+  const { data: suppliers } = useFetch('/suppliers');
+  const { data: transactions, refetch: refetchTransactions } = useFetch(`/transactions?supplier_id=${id}`, [id]);
+  const supplier = suppliers.find((s) => s.id === parseInt(id));
   const [type, setType] = useState('payment');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
-
-  const fetchData = async () => {
-    try {
-      const [suppliersRes, txRes] = await Promise.all([
-        api.get('/suppliers'),
-        api.get(`/transactions?supplier_id=${id}`),
-      ]);
-      const found = suppliersRes.data.find((s) => s.id === parseInt(id));
-      setSupplier(found);
-      setTransactions(txRes.data);
-    } catch (err) {
-      setError('Veriler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,13 +25,12 @@ function SupplierLedger() {
       });
       setAmount('');
       setNote('');
-      fetchData();
+      refetchTransactions();
     } catch (err) {
       setError(err.response?.data?.error || 'İşlem başarısız');
     }
   };
 
-  if (error && !supplier) return <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>;
   if (!supplier) return <p style={{ textAlign: 'center' }}>Yükleniyor...</p>;
 
   return (
