@@ -1,47 +1,32 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { logAction } = require('../utils/auditLogger');
+const ApiError = require('../utils/ApiError');
 
 const getCustomers = asyncHandler(async (req, res) => {
   const { data, error } = await supabase.from('customers').select('*');
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
   res.json(data);
 });
 
 const getCustomerById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase.from('customers').select('*').eq('id', id).single();
-  if (error) {
-    const err = new Error('Müşteri bulunamadı');
-    err.statusCode = 404;
-    throw err;
-  }
+  if (error) throw new ApiError(404, 'Müşteri bulunamadı');
   res.json(data);
 });
 
 const createCustomer = asyncHandler(async (req, res) => {
   const { name, email, phone } = req.body;
 
-  if (!name) {
-    const err = new Error('name zorunlu');
-    err.statusCode = 400;
-    throw err;
-  }
+  if (!name) throw new ApiError(400, 'name zorunlu');
 
   const { data, error } = await supabase
     .from('customers')
     .insert([{ name, email, phone }])
     .select();
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   await logAction(req.user.id, 'create', 'customer', data[0].id, `${name} eklendi`);
 
@@ -58,16 +43,8 @@ const updateCustomer = asyncHandler(async (req, res) => {
     .eq('id', id)
     .select();
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
-  if (!data.length) {
-    const err = new Error('Müşteri bulunamadı');
-    err.statusCode = 404;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
+  if (!data.length) throw new ApiError(404, 'Müşteri bulunamadı');
 
   await logAction(req.user.id, 'update', 'customer', id, 'Müşteri güncellendi');
 
@@ -77,11 +54,7 @@ const updateCustomer = asyncHandler(async (req, res) => {
 const deleteCustomer = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { error } = await supabase.from('customers').delete().eq('id', id);
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   await logAction(req.user.id, 'delete', 'customer', id, 'Müşteri silindi');
 

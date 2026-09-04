@@ -2,16 +2,12 @@ const ExcelJS = require('exceljs');
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { logAction } = require('../utils/auditLogger');
+const ApiError = require('../utils/ApiError');
 
-// Tüm ürünleri Excel dosyası olarak dışa aktarır
 const exportProducts = asyncHandler(async (req, res) => {
   const { data: products, error } = await supabase.from('products').select('*');
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Ürünler');
@@ -43,13 +39,8 @@ const exportProducts = asyncHandler(async (req, res) => {
   res.end();
 });
 
-// Excel dosyasından toplu ürün içe aktarır
 const importProducts = asyncHandler(async (req, res) => {
-  if (!req.file) {
-    const err = new Error('Excel dosyası yüklenmedi');
-    err.statusCode = 400;
-    throw err;
-  }
+  if (!req.file) throw new ApiError(400, 'Excel dosyası yüklenmedi');
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(req.file.buffer);
@@ -58,9 +49,8 @@ const importProducts = asyncHandler(async (req, res) => {
   const productsToInsert = [];
   const errors = [];
 
-  // İlk satır başlık olduğu için 2. satırdan başlıyoruz
   sheet.eachRow((row, rowNumber) => {
-    if (rowNumber === 1) return; // başlık satırını atla
+    if (rowNumber === 1) return;
 
     const name = row.getCell(1).value;
     const sku = row.getCell(2).value;
@@ -83,18 +73,12 @@ const importProducts = asyncHandler(async (req, res) => {
   });
 
   if (productsToInsert.length === 0) {
-    const err = new Error('Geçerli ürün satırı bulunamadı');
-    err.statusCode = 400;
-    throw err;
+    throw new ApiError(400, 'Geçerli ürün satırı bulunamadı');
   }
 
   const { data, error } = await supabase.from('products').insert(productsToInsert).select();
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   await logAction(req.user.id, 'create', 'product', null, `${data.length} ürün toplu içe aktarıldı`);
 

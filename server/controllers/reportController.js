@@ -1,18 +1,14 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
+const ApiError = require('../utils/ApiError');
 
-// Son 6 ayın satış toplamlarını aylık gruplar
 const getMonthlySales = asyncHandler(async (req, res) => {
   const { data: orders, error } = await supabase
     .from('orders')
     .select('total, type, created_at')
     .eq('type', 'sale');
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   const monthlyTotals = {};
   orders.forEach((order) => {
@@ -27,17 +23,12 @@ const getMonthlySales = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// En çok satılan ürünleri getirir (adet bazında)
 const getTopProducts = asyncHandler(async (req, res) => {
   const { data: items, error } = await supabase
     .from('order_items')
     .select('qty, products(name)');
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   const productTotals = {};
   items.forEach((item) => {
@@ -53,16 +44,11 @@ const getTopProducts = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// Toplam alacak (müşterilerden) ve toplam borç (tedarikçilere) özetini getirir
 const getBalanceSummary = asyncHandler(async (req, res) => {
   const { data: customers, error: custError } = await supabase.from('customers').select('balance');
   const { data: suppliers, error: supError } = await supabase.from('suppliers').select('balance');
 
-  if (custError || supError) {
-    const err = new Error('Bakiye özeti alınamadı');
-    err.statusCode = 400;
-    throw err;
-  }
+  if (custError || supError) throw new ApiError(400, 'Bakiye özeti alınamadı');
 
   const totalReceivable = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
   const totalPayable = suppliers.reduce((sum, s) => sum + (s.balance || 0), 0);
@@ -73,7 +59,6 @@ const getBalanceSummary = asyncHandler(async (req, res) => {
   });
 });
 
-// En çok borçlu müşterileri getirir (bakiyeye göre azalan sıralı)
 const getTopDebtors = asyncHandler(async (req, res) => {
   const { data: customers, error } = await supabase
     .from('customers')
@@ -82,36 +67,21 @@ const getTopDebtors = asyncHandler(async (req, res) => {
     .order('balance', { ascending: false })
     .limit(10);
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
-
+  if (error) throw new ApiError(400, error.message);
   res.json(customers);
 });
 
-// Ürünlerin stok tükenme tahminini ve sipariş önerisini hesaplar
 const getReorderSuggestions = asyncHandler(async (req, res) => {
   const { data: products, error: prodError } = await supabase.from('products').select('*');
-  if (prodError) {
-    const err = new Error(prodError.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (prodError) throw new ApiError(400, prodError.message);
 
   const { data: movements, error: movError } = await supabase
     .from('stock_movements')
     .select('product_id, change_qty, created_at')
-    .lt('change_qty', 0); // sadece stok azalışları (satışlar)
+    .lt('change_qty', 0);
 
-  if (movError) {
-    const err = new Error(movError.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (movError) throw new ApiError(400, movError.message);
 
-  // Son 30 günü referans alıyoruz
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -122,7 +92,6 @@ const getReorderSuggestions = asyncHandler(async (req, res) => {
 
     const totalSold = productMovements.reduce((sum, m) => sum + Math.abs(m.change_qty), 0);
 
-    // Kaç günlük veri var (en erken hareketten bugüne)
     let daysOfData = 30;
     if (productMovements.length > 0) {
       const earliestDate = new Date(Math.min(...productMovements.map((m) => new Date(m.created_at))));
@@ -141,7 +110,7 @@ const getReorderSuggestions = asyncHandler(async (req, res) => {
       critical_level: product.critical_level,
       avgDailySales: Math.round(avgDailySales * 100) / 100,
       daysUntilStockout,
-      shouldReorder: daysUntilStockout !== null && daysUntilStockout <= 14, // 14 gün içinde biterse öner
+      shouldReorder: daysUntilStockout !== null && daysUntilStockout <= 14,
     };
   }).filter((p) => p.shouldReorder);
 

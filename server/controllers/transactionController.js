@@ -1,8 +1,8 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { logAction } = require('../utils/auditLogger');
+const ApiError = require('../utils/ApiError');
 
-// Bir müşterinin veya tedarikçinin hareket geçmişini getirir
 const getTransactions = asyncHandler(async (req, res) => {
   const { customer_id, supplier_id } = req.query;
 
@@ -13,23 +13,15 @@ const getTransactions = asyncHandler(async (req, res) => {
 
   const { data, error } = await query;
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
-
+  if (error) throw new ApiError(400, error.message);
   res.json(data);
 });
 
-// Manuel bir ödeme/tahsilat kaydı oluşturur ve bakiyeyi günceller
 const createTransaction = asyncHandler(async (req, res) => {
   const { customer_id, supplier_id, type, amount, note } = req.body;
 
   if (!type || amount === undefined || amount === null || (!customer_id && !supplier_id)) {
-    const err = new Error('type, amount ve customer_id veya supplier_id zorunlu');
-    err.statusCode = 400;
-    throw err;
+    throw new ApiError(400, 'type, amount ve customer_id veya supplier_id zorunlu');
   }
 
   const { data, error } = await supabase
@@ -37,11 +29,7 @@ const createTransaction = asyncHandler(async (req, res) => {
     .insert([{ customer_id, supplier_id, type, amount, note }])
     .select();
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   const table = customer_id ? 'customers' : 'suppliers';
   const id = customer_id || supplier_id;

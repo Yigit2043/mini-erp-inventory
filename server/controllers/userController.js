@@ -1,30 +1,23 @@
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { logAction } = require('../utils/auditLogger');
+const ApiError = require('../utils/ApiError');
 
-// Tüm kullanıcıları getirir (şifre hash'i hariç)
 const getUsers = asyncHandler(async (req, res) => {
   const { data, error } = await supabase
     .from('users')
     .select('id, email, role, created_at');
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
   res.json(data);
 });
 
-// Bir kullanıcının rolünü günceller
 const updateUserRole = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
 
   if (!role || !['user', 'admin'].includes(role)) {
-    const err = new Error('Geçerli bir rol girin: user veya admin');
-    err.statusCode = 400;
-    throw err;
+    throw new ApiError(400, 'Geçerli bir rol girin: user veya admin');
   }
 
   const { data, error } = await supabase
@@ -33,11 +26,7 @@ const updateUserRole = asyncHandler(async (req, res) => {
     .eq('id', id)
     .select('id, email, role');
 
-  if (error) {
-    const err = new Error(error.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (error) throw new ApiError(400, error.message);
 
   await logAction(req.user.id, 'update', 'user', id, `Rol değiştirildi: ${role}`);
 

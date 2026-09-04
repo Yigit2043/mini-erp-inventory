@@ -1,8 +1,8 @@
 const PDFDocument = require('pdfkit');
 const supabase = require('../config/supabase');
 const { asyncHandler } = require('../middleware/errorHandler');
+const ApiError = require('../utils/ApiError');
 
-// Bir siparişin PDF faturasını oluşturur ve indirilebilir olarak döner
 const generateInvoice = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -12,24 +12,15 @@ const generateInvoice = asyncHandler(async (req, res) => {
     .eq('id', id)
     .single();
 
-  if (orderError) {
-    const err = new Error('Sipariş bulunamadı');
-    err.statusCode = 404;
-    throw err;
-  }
+  if (orderError) throw new ApiError(404, 'Sipariş bulunamadı');
 
   const { data: items, error: itemsError } = await supabase
     .from('order_items')
     .select('*, products(name, sku)')
     .eq('order_id', id);
 
-  if (itemsError) {
-    const err = new Error(itemsError.message);
-    err.statusCode = 400;
-    throw err;
-  }
+  if (itemsError) throw new ApiError(400, itemsError.message);
 
-  // PDF dosyasını oluşturmaya başla
   const doc = new PDFDocument({ margin: 50 });
 
   res.setHeader('Content-Type', 'application/pdf');
@@ -37,18 +28,15 @@ const generateInvoice = asyncHandler(async (req, res) => {
 
   doc.pipe(res);
 
-  // Başlık
   doc.fontSize(20).text('FATURA', { align: 'center' });
   doc.moveDown();
 
-  // Sipariş bilgileri
   doc.fontSize(12);
   doc.text(`Sipariş No: #${order.id}`);
   doc.text(`Tarih: ${new Date(order.created_at).toLocaleString('tr-TR')}`);
   doc.text(`Tip: ${order.type === 'sale' ? 'Satış' : 'Alım'}`);
   doc.moveDown();
 
-  // Tablo başlığı
   doc.fontSize(12).text('Ürünler:', { underline: true });
   doc.moveDown(0.5);
 
