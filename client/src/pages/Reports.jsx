@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -10,31 +9,13 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Reports() {
-  const [monthlySales, setMonthlySales] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
-  const [error, setError] = useState('');
-
-  const fetchReports = async () => {
-    try {
-      const [salesRes, productsRes] = await Promise.all([
-        api.get('/reports/monthly-sales'),
-        api.get('/reports/top-products'),
-      ]);
-      setMonthlySales(salesRes.data);
-      setTopProducts(productsRes.data);
-    } catch (err) {
-      setError('Raporlar yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchReports();
-  }, []);
+  const { data: monthlySales, error: salesError } = useFetch('/reports/monthly-sales');
+  const { data: topProducts, error: productsError } = useFetch('/reports/top-products');
 
   const salesChartData = {
     labels: monthlySales.map((s) => s.month),
@@ -63,7 +44,7 @@ function Reports() {
       <Link to="/dashboard">← Dashboard'a dön</Link>
       <h2>Raporlar</h2>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {(salesError || productsError) && <p style={{ color: 'red' }}>{salesError || productsError}</p>}
 
       <div style={{ marginBottom: '50px' }}>
         <h3>Aylık Satış</h3>

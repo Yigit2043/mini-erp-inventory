@@ -1,23 +1,8 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function AuditLogs() {
-  const [logs, setLogs] = useState([]);
-  const [error, setError] = useState('');
-
-  const fetchLogs = async () => {
-    try {
-      const res = await api.get('/audit-logs');
-      setLogs(res.data);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Loglar yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchLogs();
-  }, []);
+  const { data: logs, error } = useFetch('/audit-logs');
 
   const actionColor = (action) => {
     if (action === 'create') return 'green';

@@ -1,30 +1,16 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function UserManagement() {
-  const [users, setUsers] = useState([]);
-  const [error, setError] = useState('');
-
-  const fetchUsers = async () => {
-    try {
-      const res = await api.get('/users');
-      setUsers(res.data);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Kullanıcılar yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const { data: users, error, refetch } = useFetch('/users');
 
   const handleRoleChange = async (id, newRole) => {
     try {
       await api.put(`/users/${id}/role`, { role: newRole });
-      fetchUsers();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'Rol güncellenemedi');
+      console.error('Rol güncellenemedi');
     }
   };
 

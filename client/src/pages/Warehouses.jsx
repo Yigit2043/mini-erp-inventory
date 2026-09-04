@@ -1,51 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function Warehouses() {
-  const [warehouses, setWarehouses] = useState([]);
-  const [products, setProducts] = useState([]);
+  const { data: warehouses, error: fetchError, refetch } = useFetch('/warehouses');
+  const { data: products } = useFetch('/products');
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [warehouseStock, setWarehouseStock] = useState([]);
   const [stockProductId, setStockProductId] = useState('');
   const [stockQty, setStockQty] = useState('');
-  const [error, setError] = useState('');
-
-  const fetchWarehouses = async () => {
-    try {
-      const res = await api.get('/warehouses');
-      setWarehouses(res.data);
-    } catch (err) {
-      setError('Depolar yüklenemedi');
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      const res = await api.get('/products');
-      setProducts(res.data);
-    } catch (err) {
-      console.error('Ürünler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchWarehouses();
-    fetchProducts();
-  }, []);
+  const [formError, setFormError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
     try {
       await api.post('/warehouses', { name, location });
       setName('');
       setLocation('');
-      fetchWarehouses();
+      refetch();
     } catch (err) {
-      setError(err.response?.data?.error || 'Depo eklenemedi');
+      setFormError(err.response?.data?.error || 'Depo eklenemedi');
     }
   };
 
@@ -55,13 +33,13 @@ function Warehouses() {
       const res = await api.get(`/warehouses/${warehouse.id}/stock`);
       setWarehouseStock(res.data);
     } catch (err) {
-      setError('Depo stoğu yüklenemedi');
+      setFormError('Depo stoğu yüklenemedi');
     }
   };
 
   const handleSetStock = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
     try {
       await api.post('/warehouses/product-stock', {
         product_id: parseInt(stockProductId),
@@ -72,7 +50,7 @@ function Warehouses() {
       setStockQty('');
       viewWarehouseStock(selectedWarehouse);
     } catch (err) {
-      setError('Stok ayarlanamadı');
+      setFormError('Stok ayarlanamadı');
     }
   };
 
@@ -96,7 +74,7 @@ function Warehouses() {
         <button type="submit">Depo Ekle</button>
       </form>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {(formError || fetchError) && <p style={{ color: 'red' }}>{formError || fetchError}</p>}
 
       <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
         <thead>

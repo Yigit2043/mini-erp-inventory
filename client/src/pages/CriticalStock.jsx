@@ -1,24 +1,9 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
+import useFetch from '../hooks/useFetch';
 
 function CriticalStock() {
-  const [products, setProducts] = useState([]);
-  const [error, setError] = useState('');
-
-  const fetchCriticalProducts = async () => {
-    try {
-      const res = await api.get('/products');
-      const critical = res.data.filter((p) => p.stock_qty <= p.critical_level);
-      setProducts(critical);
-    } catch (err) {
-      setError('Ürünler yüklenemedi');
-    }
-  };
-
-  useEffect(() => {
-    fetchCriticalProducts();
-  }, []);
+  const { data: products, error } = useFetch('/products');
+  const criticalProducts = products.filter((p) => p.stock_qty <= p.critical_level);
 
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto' }}>
@@ -27,7 +12,7 @@ function CriticalStock() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {products.length === 0 ? (
+      {criticalProducts.length === 0 ? (
         <p>Kritik seviyede ürün yok, her şey yolunda 👍</p>
       ) : (
         <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -40,7 +25,7 @@ function CriticalStock() {
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => (
+            {criticalProducts.map((p) => (
               <tr key={p.id} style={{ backgroundColor: '#ffe6e6' }}>
                 <td>{p.name}</td>
                 <td>{p.sku}</td>
